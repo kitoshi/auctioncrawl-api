@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const dotenv = require('dotenv');
+const fetch = require('node-fetch');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -99,6 +101,20 @@ const getData = async () => {
     })
     client.set('link', stringarr, redis.print)
 }
+
+const callEbay = async () => {
+  fetch(
+    `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords`+
+    `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7`+
+    `&REST-PAYLOAD`+
+    `&keywords=blue%20tape`
+  )
+.then((res) => res.text())
+.then((res) => console.log(res))
+.catch((err) => err);
+}
+
+callEbay()
 crawler()
 getData()
 setInterval(function () { getData(); }, 600*1000*Math.random())
