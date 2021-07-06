@@ -80,7 +80,9 @@ puppeteer
   .catch(console.error);
 }
 
-const getData = async () => {
+const sendData = async () => {
+  await crawler()
+  await callEbay()
   const redis = require("redis");
     const promise = new Promise((resolve, reject) => {
         setTimeout(() => resolve(itemNames), 10000)
@@ -100,25 +102,36 @@ const getData = async () => {
         console.error(error)
     })
     client.set('link', stringarr, redis.print)
+    //client.set('itemSearchURL', ebayList, redis.print)
 }
 
+
+const ebayList = []//move this in function
+
 const callEbay = async () => {
+  await crawler()
   fetch(
     `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords`+
-    `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7`+
-    `&REST-PAYLOAD`+
-    `&keywords=blue%20tape`
+      `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7`+
+      `&RESPONSE-DATA-FORMAT=JSON`+
+      `&GLOBAL-ID=EBAY-ENCA`+
+      `&REST-PAYLOAD`+
+      `&keywords=blue%20shoes`
   )
-.then((res) => res.text())
-.then((res) => console.log(res))
+.then((response) => response.json())
+//.then((response) => ebayJSON = convert.xml2json(response, {compact: true, spaces: 4}))
+//.then(
+.then(data => {
+    return console.log(data);
+  })
 .catch((err) => err);
 }
 
-callEbay()
+
+
 crawler()
-getData()
-setInterval(function () { getData(); }, 600*1000*Math.random())
-
+sendData()
+callEbay()
+setInterval(function () { sendData(); }, 600*1000*Math.random())
   
-
 module.exports = app;
