@@ -52,7 +52,7 @@ const url =
   "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&&sr=1&rpp=25";
 const url2 =
   "https://www.gcsurplus.ca/mn-eng.cfm?snc=wfsav&sc=ach-shop&vndsld=0&lci=&lcn=540097&str=1&sf=ferm-clos&so=";
-const crawler = () => {
+const crawler = async () => {
   puppeteer
     .launch()
     .then((browser) => browser.newPage())
@@ -87,8 +87,6 @@ const crawler = () => {
 };
 
 const sendData = async () => {
-  await crawler();
-  await callEbay();
   const redis = require("redis");
   const promise = new Promise((resolve, reject) => {
     setTimeout(() => resolve(itemNames), 10000);
@@ -114,7 +112,6 @@ const sendData = async () => {
 const ebayList = []; //move this in function
 
 const callEbay = async () => {
-  await crawler();
   fetch(
     `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
       `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7` +
@@ -130,11 +127,16 @@ const callEbay = async () => {
     .catch((err) => err);
 };
 
-crawler();
-sendData();
-callEbay();
-setInterval(function () {
-  sendData();
-}, 600 * 1000 * Math.random());
+async function allData() {
+  await crawler(),
+  await sendData(),
+  await callEbay()
+}
+
+allData()
+
+/*setInterval(function () {
+  crawler();
+}, 600 * 1000 * Math.random());*/
 
 module.exports = app;
