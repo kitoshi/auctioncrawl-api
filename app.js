@@ -115,24 +115,26 @@ const sendData = async () => {
 const ebayList = []; //move this in function
 
 const callEbay = async () => {
+  const fetches = []
+  for (let i = 0; i < itemNames.length; i++) {
   fetch(
     `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
       `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7` +
       `&RESPONSE-DATA-FORMAT=JSON` +
       `&GLOBAL-ID=EBAY-ENCA` +
-      `&REST-PAYLOAD=TRUE` +
-      `&keywords=Harry%20Potter` +
+      `&keywords=${itemNames[i].title}` +
       `&paginationInput.entriesPerPage=1`
   )
     .then((response) => response.json())
     .then((data) => {
       ebayList.push(data)
-      console.log(ebayList)
     })
     .catch((err) => err);
+  }
 };
 
 const sendEbay = async () => {
+  console.log(ebayList)
   const redis = require("redis");
   const promise = new Promise((resolve, reject) => {
     setTimeout(() => resolve(ebayList), 20000);
