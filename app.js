@@ -56,7 +56,7 @@ const crawler = async () => {
   puppeteer
     .launch()
     .then((browser) => browser.newPage())
-    .then((page) => {
+    .then(async (page) => {
       return page.goto(url).then(function () {
         return page.content();
       });
@@ -78,6 +78,7 @@ const crawler = async () => {
           });
         });
       $("dd[class=short]")
+      
         .find("span")
         .each(function (index, element) {
           itemNames[index].price = $(element).text();
@@ -117,20 +118,45 @@ const callEbay = async () => {
       `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7` +
       `&RESPONSE-DATA-FORMAT=JSON` +
       `&GLOBAL-ID=EBAY-ENCA` +
-      `&REST-PAYLOAD` +
-      `&keywords=blue%20shoes`
+      `&REST-PAYLOAD=TRUE` +
+      `&keywords=Harry%20Potter` +
+      `&paginationInput.entriesPerPage=1`
   )
     .then((response) => response.json())
     .then((data) => {
-      return console.log(data);
+      ebayList.push(data)
+      console.log(ebayList)
     })
     .catch((err) => err);
+};
+
+const sendEbay = async () => {
+  const redis = require("redis");
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => resolve(ebayList), 10000);
+  });
+
+  const response = await promise;
+  console.log(response);
+  const ebaystr = JSON.stringify(response);
+  //redis post (set)
+  const client = redis.createClient({
+    host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
+    port: 10514,
+    password: "7e9Ui1fX1YsdPy2vJyxI9vsV0Fb9qZ7J",
+  });
+
+  client.on("error", function (error) {
+    console.error(error);
+  });
+  client.set('findItemsByKeywordsResponse', ebaystr, redis.print)
 };
 
 async function allData() {
   await crawler(),
   await sendData(),
-  await callEbay()
+  await callEbay(),
+  await sendEbay()
 }
 
 allData()
