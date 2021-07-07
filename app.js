@@ -9,6 +9,7 @@ const fetch = require("node-fetch");
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const crawlerAPIrouter = require("./routes/crawlerAPI");
+const ebayAPIrouter = require("./routes/ebayAPI");
 const cors = require("cors");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/crawlerAPI", crawlerAPIrouter);
+app.use("/ebayAPI", ebayAPIrouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -133,7 +135,7 @@ const callEbay = async () => {
 const sendEbay = async () => {
   const redis = require("redis");
   const promise = new Promise((resolve, reject) => {
-    setTimeout(() => resolve(ebayList), 10000);
+    setTimeout(() => resolve(ebayList), 20000);
   });
 
   const response = await promise;
