@@ -50,11 +50,23 @@ app.use(function (err, req, res, next) {
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const itemNames = [];
-const url =
-  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&&sr=1&rpp=25";
+const priceList = [];
+const combinedList = [];
+//const url =
+ // "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&&sr=1&rpp=25";
 const url2 =
-  "https://www.gcsurplus.ca/mn-eng.cfm?snc=wfsav&sc=ach-shop&vndsld=0&lci=&lcn=540097&str=1&sf=ferm-clos&so=";
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=26&sr=1&rpp=25";
+const urls = [
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=26&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=51&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=76&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=101&sr=1&rpp=25",
+];
+    
 const crawler = async () => {
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i]
   puppeteer
     .launch()
     .then((browser) => browser.newPage())
@@ -66,7 +78,6 @@ const crawler = async () => {
     .then((html) => {
       const cleaner = /(?<![\b])[a-zA-Z]*/g;
       const $ = cheerio.load(html);
-
       $("td[headers=itemInfo]")
         .find("a")
         .each(function (index, element) {
@@ -83,21 +94,28 @@ const crawler = async () => {
       
         .find("span")
         .each(function (index, element) {
-          itemNames[index].price = $(element).text();
-        });
+          priceList.push({
+            price: $(element).text()
+          })})
     })
     .catch(console.error);
 };
+}
+
+
+/*
+  for (let v=0; v<=itemNames.length; v++) {
+    combinedList.push({
+     ...itemNames[v], 
+     ...priceList[v]
+    })
+    not sure where to put combined list for async timing
+*/
 
 const sendData = async () => {
   const redis = require("redis");
-  const promise = new Promise((resolve, reject) => {
-    setTimeout(() => resolve(itemNames), 10000);
-  });
-
-  const response = await promise;
-  console.log(response);
-  const stringarr = JSON.stringify(response);
+  
+  const stringarr = JSON.stringify(combinedList);
   //redis post (set)
   const client = redis.createClient({
     host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
@@ -115,7 +133,6 @@ const sendData = async () => {
 const ebayList = []; //move this in function
 
 const callEbay = async () => {
-  const fetches = []
   for (let i = 0; i < itemNames.length; i++) {
   fetch(
     `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
@@ -134,10 +151,9 @@ const callEbay = async () => {
 };
 
 const sendEbay = async () => {
-  console.log(ebayList)
   const redis = require("redis");
   const promise = new Promise((resolve, reject) => {
-    setTimeout(() => resolve(ebayList), 20000);
+    setTimeout(() => resolve(ebayList), 60000);
   });
 
   const response = await promise;
@@ -157,10 +173,10 @@ const sendEbay = async () => {
 };
 
 async function allData() {
-  await crawler(),
-  await sendData(),
-  await callEbay(),
-  await sendEbay()
+  await crawler()
+ // await sendData(),
+ // await callEbay(),
+ // await sendEbay()
 }
 
 allData()
