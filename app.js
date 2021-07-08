@@ -62,15 +62,18 @@ const urls = [
   "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=51&sr=1&rpp=25",
   "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=76&sr=1&rpp=25",
   "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=101&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=126&sr=1&rpp=25",
+  "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=151&sr=1&rpp=25",
 ];
     
-const crawler = async () => {
+const crawler = () => {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i]
   puppeteer
     .launch()
     .then((browser) => browser.newPage())
     .then(async (page) => {
+      page.setDefaultNavigationTimeout(0);
       return page.goto(url).then(function () {
         return page.content();
       });
@@ -96,25 +99,34 @@ const crawler = async () => {
         .each(function (index, element) {
           priceList.push({
             price: $(element).text()
-          })})
+          })
+        })
     })
     .catch(console.error);
 };
+console.log(itemNames)
 }
 
 
 /*
-  for (let v=0; v<=itemNames.length; v++) {
-    combinedList.push({
-     ...itemNames[v], 
-     ...priceList[v]
-    })
+  
     not sure where to put combined list for async timing
 */
 
 const sendData = async () => {
   const redis = require("redis");
-  
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => resolve(itemNames), 29000);
+  });
+
+  const response = await promise;
+  console.log(response);
+  for (let v=0; v<=itemNames.length; v++) {
+    combinedList.push({
+     ...itemNames[v], 
+     ...priceList[v]
+    })
+  }
   const stringarr = JSON.stringify(combinedList);
   //redis post (set)
   const client = redis.createClient({
@@ -153,7 +165,7 @@ const callEbay = async () => {
 const sendEbay = async () => {
   const redis = require("redis");
   const promise = new Promise((resolve, reject) => {
-    setTimeout(() => resolve(ebayList), 60000);
+    setTimeout(() => resolve(ebayList), 29500);
   });
 
   const response = await promise;
@@ -173,10 +185,10 @@ const sendEbay = async () => {
 };
 
 async function allData() {
-  await crawler()
- // await sendData(),
- // await callEbay(),
- // await sendEbay()
+  await crawler(),
+  await sendData(),
+  await callEbay(),
+  await sendEbay()
 }
 
 allData()
