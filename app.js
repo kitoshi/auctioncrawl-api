@@ -73,7 +73,7 @@ const crawler = () => {
     .launch()
     .then((browser) => browser.newPage())
     .then(async (page) => {
-      page.setDefaultNavigationTimeout(0);
+      page.setDefaultNavigationTimeout(60000);
       return page.goto(url).then(function () {
         return page.content();
       });
@@ -121,7 +121,7 @@ const sendData = async () => {
 
   const response = await promise;
   console.log(response);
-  for (let v=0; v<=itemNames.length; v++) {
+  for (let v=0; v<itemNames.length; v++) {
     combinedList.push({
      ...itemNames[v], 
      ...priceList[v]
