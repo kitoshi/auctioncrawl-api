@@ -48,22 +48,17 @@ app.use(function (err, req, res, next) {
 
 //redis
 const redis = require("redis");
-const { promisify } = require("util");
 const client = redis.createClient({
   host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
   port: 10514,
   password: "7e9Ui1fX1YsdPy2vJyxI9vsV0Fb9qZ7J",
 });
-const get = promisify(client.get).bind(client);
-const set = promisify(client.set).bind(client);
-const getList = promisify(client.lrange).bind(client);
 
 //crawler
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const itemNames = [];
 const priceList = [];
-const combinedList = [];
 const ebayList = [];
 //const url =
 // "https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&&sr=1&rpp=25";
@@ -80,10 +75,9 @@ const urls = [
 ];
 
 const crawler = async () => {
-  //crawler is working dont touch
-  await new Promise((r) => {
-    setTimeout(r, 40000);
     for (let i = 0; i < urls.length; i++) {
+      await new Promise((r) => {
+      setTimeout(r, 10000)
       const url = urls[i];
       puppeteer
         .launch()
@@ -95,6 +89,8 @@ const crawler = async () => {
           });
         })
         .then(async(html) => {
+          await new Promise((rt) => {
+            setTimeout(rt, 5000);
           const cleaner = /(?<![\b])[a-zA-Z]*/g;
           const $ = cheerio.load(html);
           $("td[headers=itemInfo]")
@@ -107,31 +103,30 @@ const crawler = async () => {
                   .filter((entry) => /\S/.test(entry))
                   .join(" "),
                 link: "https://www.gcsurplus.ca/" + $(element).attr("href")
-            })
             });
+          })
           $("dd[class=short]")
             .find("span")
             .each(function (index, element) {
-
               priceList.push({
-                price: $(element).text(),
+                price: $(element).text()
               });
               console.log("working");
             });
         })
         .catch(console.error);
+      })
+    })
     }
-  });
 };
 
- //move this in function
 
 const callEbay = async () => {
-  await new Promise((r) => {
-    setTimeout(r, 10000);
-    console.log(itemNames);
+  
     console.log("callebaystart");
     for (let z = 0; z < itemNames.length; z++) {
+      await new Promise((r) => {
+        setTimeout(r, 500);
       fetch(
         `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
           `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7` +
@@ -145,33 +140,56 @@ const callEbay = async () => {
           ebayList.push(data);
         })
         .catch((err) => err);
+      })
     }
-  });
+  ;
 };
 
+
+
 const sendEbay = async () => {
-  await new Promise((r) => {
-    setTimeout(r, 10000);
+
+  const combinedList = [];
+  const combinedEbay = [];
     for (let v = 0; v < itemNames.length; v++) {
+      await new Promise((r) => {
+        setTimeout(r, 100);
       combinedList.push({
         ...itemNames[v],
         ...priceList[v],
+        ...[v]
       });
+      console.log('combining')
+    })
     }
-  });
-  await new Promise((r) => {
-    setTimeout(r, 10000);
+    
+    for (let q = 0; q < ebayList.length; q++) {
+      await new Promise((r) => {
+        setTimeout(r, 100);
+      combinedEbay.push({
+        ...ebayList[q],
+        ...[q]
+      });
+      console.log('combining2')
+    })
+    }
     console.log("sendebay");
-    console.log(combinedList);
     const stringarr = JSON.stringify(combinedList);
-    const ebaystr = JSON.stringify(ebayList);
+    const ebaystr = JSON.stringify(combinedEbay);
+    
     //redis post (set)
     client.on("error", function (error) {
       console.error(error);
     });
-    client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
-    client.set("link", stringarr, redis.print);
-  });
+    
+    await new Promise((r) => {
+      setTimeout(r, 10000);
+      client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
+    });
+    await new Promise((r) => {
+      setTimeout(r, 10000);
+      client.set("link", stringarr, redis.print);
+    });  
 };
 
 const getAll = async () => {
