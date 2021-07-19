@@ -3,9 +3,8 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const dotenv = require("dotenv");
 const fetch = require("node-fetch");
-
+require('dotenv').config
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const crawlerAPIrouter = require("./routes/crawlerAPI");
@@ -51,7 +50,7 @@ const redis = require("redis");
 const client = redis.createClient({
   host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
   port: 10514,
-  password: "7e9Ui1fX1YsdPy2vJyxI9vsV0Fb9qZ7J",
+  password: process.env.REDIS_PASSWORD,
 });
 
 //crawler
@@ -128,8 +127,8 @@ const callEbay = async () => {
       await new Promise((r) => {
         setTimeout(r, 500);
       fetch(
-        `https://svcs.sandbox.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
-          `&SECURITY-APPNAME=RobertCh-auctionc-SBX-c58419a39-58c60cb7` +
+        `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
+          `&SECURITY-APPNAME=${process.env.SECURITY_APPNAME}` +
           `&RESPONSE-DATA-FORMAT=JSON` +
           `&GLOBAL-ID=EBAY-ENCA` +
           `&keywords=${itemNames[z].title}` +
@@ -157,7 +156,6 @@ const sendEbay = async () => {
       combinedList.push({
         ...itemNames[v],
         ...priceList[v],
-        ...[v]
       });
       console.log('combining')
     })
@@ -168,7 +166,6 @@ const sendEbay = async () => {
         setTimeout(r, 100);
       combinedEbay.push({
         ...ebayList[q],
-        ...[q]
       });
       console.log('combining2')
     })
@@ -196,6 +193,6 @@ const getAll = async () => {
   await crawler(), await callEbay(), await sendEbay();
 };
 
-getAll();
+setTimeout(getAll(), 14400000)
 
 module.exports = app;
