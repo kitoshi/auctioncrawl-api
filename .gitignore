@@ -21,6 +21,7 @@
 .yaml
 app.yaml
 dispatch.yaml
+cron.yaml
 
 npm-debug.log*
 yarn-debug.log*

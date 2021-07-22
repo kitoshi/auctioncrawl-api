@@ -183,6 +183,10 @@ const sendEbay = async () => {
       setTimeout(r, 10000);
       client.set("link", stringarr, redis.print);
     });  
+    await new Promise((r) => {
+      setTimeout(r, 10000);
+  redis.RedisClient.quit()
+  })
 };
 
 const getAll = async () => {

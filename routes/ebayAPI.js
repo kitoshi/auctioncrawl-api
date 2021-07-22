@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/', function(req, res, next) {
+router.get('/', async function(req, res, next) {
     const redis = require("redis");
     const client = redis.createClient({
         host: 'redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com',
@@ -20,7 +20,10 @@ router.get('/', function(req, res, next) {
         console.log('GET result ->' + result);
         res.send(result);
     });
-    
+    await new Promise((r) => {
+        setTimeout(r, 10000);
+    redis.RedisClient.quit()
+    })
 
     })
 
