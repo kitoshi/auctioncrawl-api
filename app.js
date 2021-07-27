@@ -6,7 +6,6 @@ const logger = require("morgan");
 const fetch = require("node-fetch");
 require('dotenv').config
 const indexRouter = require("./routes/index");
-const usersRouter = require("./routes/users");
 const crawlerAPIrouter = require("./routes/crawlerAPI");
 const ebayAPIrouter = require("./routes/ebayAPI");
 const cors = require("cors");
