@@ -4,7 +4,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const fetch = require("node-fetch");
-require('dotenv').config
+require("dotenv").config;
 const indexRouter = require("./routes/index");
 const crawlerAPIrouter = require("./routes/crawlerAPI");
 const ebayAPIrouter = require("./routes/ebayAPI");
@@ -68,9 +68,9 @@ const urls = [
 ];
 
 const crawler = async () => {
-    for (let i = 0; i < urls.length; i++) {
-      await new Promise((r) => {
-      setTimeout(r, 10000)
+  for (let i = 0; i < urls.length; i++) {
+    await new Promise((r) => {
+      setTimeout(r, 10000);
       const url = urls[i];
       puppeteer
         .launch()
@@ -81,45 +81,42 @@ const crawler = async () => {
             return page.content();
           });
         })
-        .then(async(html) => {
+        .then(async (html) => {
           await new Promise((rt) => {
             setTimeout(rt, 5000);
-          const cleaner = /(?<![\b])[a-zA-Z]*/g;
-          const $ = cheerio.load(html);
-          $("td[headers=itemInfo]")
-            .find("a")
-            .each(function (index, element) {
-              itemNames.push({
-                title: $(element)
-                  .text()
-                  .match(cleaner)
-                  .filter((entry) => /\S/.test(entry))
-                  .join(" "),
-                link: "https://www.gcsurplus.ca/" + $(element).attr("href")
-            });
-          })
-          $("dd[class=short]")
-            .find("span")
-            .each(function (index, element) {
-              priceList.push({
-                price: $(element).text()
+            const cleaner = /(?<![\b])[a-zA-Z]*/g;
+            const $ = cheerio.load(html);
+            $("td[headers=itemInfo]")
+              .find("a")
+              .each(function (index, element) {
+                itemNames.push({
+                  title: $(element)
+                    .text()
+                    .match(cleaner)
+                    .filter((entry) => /\S/.test(entry))
+                    .join(" "),
+                  link: "https://www.gcsurplus.ca/" + $(element).attr("href"),
+                });
               });
-              console.log("working");
-            });
-        })
-        .catch(console.error);
-      })
-    })
-    }
+            $("dd[class=short]")
+              .find("span")
+              .each(function (index, element) {
+                priceList.push({
+                  price: $(element).text(),
+                });
+                console.log("working");
+              });
+          }).catch(console.error);
+        });
+    });
+  }
 };
 
-
 const callEbay = async () => {
-  
-    console.log("callebaystart");
-    for (let z = 0; z < itemNames.length; z++) {
-      await new Promise((r) => {
-        setTimeout(r, 500);
+  console.log("callebaystart");
+  for (let z = 0; z < itemNames.length; z++) {
+    await new Promise((r) => {
+      setTimeout(r, 500);
       fetch(
         `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
           `&SECURITY-APPNAME=${process.env.SECURITY_APPNAME}` +
@@ -133,64 +130,77 @@ const callEbay = async () => {
           ebayList.push(data);
         })
         .catch((err) => err);
-      })
-    }
-  ;
+    });
+  }
 };
 
-
-
 const sendEbay = async () => {
-
   const combinedList = [];
   const combinedEbay = [];
-    for (let v = 0; v < itemNames.length; v++) {
-      await new Promise((r) => {
-        setTimeout(r, 100);
+  for (let v = 0; v < itemNames.length; v++) {
+    await new Promise((r) => {
+      setTimeout(r, 100);
       combinedList.push({
         ...itemNames[v],
         ...priceList[v],
       });
-      console.log('combining')
-    })
-    }
-    
-    for (let q = 0; q < ebayList.length; q++) {
-      await new Promise((r) => {
-        setTimeout(r, 100);
+      console.log("combining");
+    });
+  }
+
+  for (let q = 0; q < ebayList.length; q++) {
+    await new Promise((r) => {
+      setTimeout(r, 100);
       combinedEbay.push({
         ...ebayList[q],
       });
-      console.log('combining2')
-    })
-    }
-    console.log("sendebay");
-    const stringarr = JSON.stringify(combinedList);
-    const ebaystr = JSON.stringify(combinedEbay);
-    
-    //redis post (set)
-    client.on("error", function (error) {
-      console.error(error);
+      console.log("combining2");
     });
-    
-    await new Promise((r) => {
-      setTimeout(r, 10000);
-      client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
-    });
-    await new Promise((r) => {
-      setTimeout(r, 10000);
-      client.set("link", stringarr, redis.print);
-    });  
-    await new Promise((r) => {
-      setTimeout(r, 10000);
-  redis.RedisClient.quit()
-  })
+  }
+  console.log("sendebay");
+  const stringarr = JSON.stringify(combinedList);
+  const ebaystr = JSON.stringify(combinedEbay);
+
+  //redis post (set)
+  client.on("error", function (error) {
+    console.error(error);
+  });
+
+  await new Promise((r) => {
+    setTimeout(r, 10000);
+    client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
+  });
+  await new Promise((r) => {
+    setTimeout(r, 10000);
+    client.set("link", stringarr, redis.print);
+  });
+  await new Promise((r) => {
+    setTimeout(r, 10000);
+  });
+};
+
+const redisQuit = async () => {
+  await new Promise((r) => {
+    setTimeout(r, 10000);
+    client.quit();
+  });
+};
+
+const reRun = async () => {
+  await new Promise((r) => {
+    setTimeout(r, 28800000);
+  });
+  getAll();
 };
 
 const getAll = async () => {
-  await crawler(), await callEbay(), await sendEbay();
+  await crawler(),
+    await callEbay(),
+    await sendEbay(),
+    await redisQuit(),
+    await reRun();
 };
 
-getAll()
+getAll();
 
 module.exports = app;
