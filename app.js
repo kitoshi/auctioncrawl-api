@@ -182,15 +182,15 @@ const sendEbay = async () => {
 const redisQuit = async () => {
   await new Promise((r) => {
     setTimeout(r, 10000);
-    client.quit();
   });
+  client.quit();
 };
 
 const reRun = async () => {
   await new Promise((r) => {
     setTimeout(r, 28800000);
-  });
-  getAll();
+  }),
+    await getAll();
 };
 
 const getAll = async () => {
