@@ -121,7 +121,7 @@ const callEbay = async () => {
         `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
           `&SECURITY-APPNAME=${process.env.SECURITY_APPNAME}` +
           `&RESPONSE-DATA-FORMAT=JSON` +
-          `&GLOBAL-ID=EBAY-ENCA` +
+          `&GLOBAL-ID=EBAY-US` +
           `&keywords=${itemNames[z].title}` +
           `&paginationInput.entriesPerPage=1`
       )
@@ -189,8 +189,8 @@ const redisQuit = async () => {
 const reRun = async () => {
   await new Promise((r) => {
     setTimeout(r, 28800000);
-  }),
-    await getAll();
+  });
+  await getAll();
 };
 
 const getAll = async () => {
