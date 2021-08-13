@@ -69,46 +69,35 @@ const urls = [
 
 const crawler = async () => {
   for (let i = 0; i < urls.length; i++) {
-    await new Promise((r) => {
-      setTimeout(r, 10000);
-      const url = urls[i];
-      puppeteer
-        .launch()
-        .then((browser) => browser.newPage())
-        .then(async (page) => {
-          page.setDefaultNavigationTimeout(60000);
-          return page.goto(url).then(function () {
-            return page.content();
-          });
-        })
-        .then(async (html) => {
-          await new Promise((rt) => {
-            setTimeout(rt, 5000);
-            const cleaner = /(?<![\b])[a-zA-Z]*/g;
-            const $ = cheerio.load(html);
-            $("td[headers=itemInfo]")
-              .find("a")
-              .each(function (index, element) {
-                itemNames.push({
-                  title: $(element)
-                    .text()
-                    .match(cleaner)
-                    .filter((entry) => /\S/.test(entry))
-                    .join(" "),
-                  link: "https://www.gcsurplus.ca/" + $(element).attr("href"),
-                });
-              });
-            $("dd[class=short]")
-              .find("span")
-              .each(function (index, element) {
-                priceList.push({
-                  price: $(element).text(),
-                });
-                console.log("working");
-              });
-          }).catch(console.error);
+    const url = urls[i];
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(url);
+    const content = await page.content();
+    //cheerio
+    const $ = cheerio.load(content);
+    const cleaner = /(?<![\b])[a-zA-Z]*/g;
+    $("td[headers=itemInfo]")
+      .find("a")
+      .each(function (index, element) {
+        itemNames.push({
+          title: $(element)
+            .text()
+            .match(cleaner)
+            .filter((entry) => /\S/.test(entry))
+            .join(" "),
+          link: "https://www.gcsurplus.ca/" + $(element).attr("href"),
         });
-    });
+      });
+    $("dd[class=short]")
+      .find("span")
+      .each(function (index, element) {
+        priceList.push({
+          price: $(element).text(),
+        });
+        console.log("working");
+      });
+    browser.close();
   }
 };
 
