@@ -76,7 +76,8 @@ const crawler = async () => {
     const content = await page.content();
     //cheerio
     const $ = cheerio.load(content);
-    const cleaner = /(?<![\b])[a-zA-Z]*/g;
+    const cleaner = /(?<![\b])[a-zA-Z0-9]*/g;
+    //regex pulling in extra numbers
     $("td[headers=itemInfo]")
       .find("a")
       .each(function (index, element) {
@@ -85,7 +86,8 @@ const crawler = async () => {
             .text()
             .match(cleaner)
             .filter((entry) => /\S/.test(entry))
-            .join(" "),
+            .join(" ")
+            .slice(0, -6),
           link: "https://www.gcsurplus.ca/" + $(element).attr("href"),
         });
       });
@@ -116,6 +118,7 @@ const callEbay = async () => {
       )
         .then((response) => response.json())
         .then((data) => {
+          console.log("searching");
           ebayList.push(data);
         })
         .catch((err) => err);
