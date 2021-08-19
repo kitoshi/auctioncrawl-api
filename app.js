@@ -43,14 +43,6 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-//redis
-const redis = require("redis");
-const client = redis.createClient({
-  host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
-  port: 10514,
-  password: process.env.REDIS_PASSWORD,
-});
-
 //crawler
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
@@ -70,7 +62,7 @@ const urls = [
 const crawler = async () => {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ ignoreHTTPSErrors: true });
     const page = await browser.newPage();
     await page.goto(url);
     const content = await page.content();
@@ -154,28 +146,24 @@ const sendEbay = async () => {
   const ebaystr = JSON.stringify(combinedEbay);
 
   //redis post (set)
-  client.on("error", function (error) {
-    console.error(error);
-  });
-
   await new Promise((r) => {
+    //redis
+    const redis = require("redis");
+    const client = redis.createClient({
+      host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
+      port: 10514,
+      password: process.env.REDIS_PASSWORD,
+    });
+    client.on("error", function (error) {
+      console.error(error);
+    });
     setTimeout(r, 10000);
     client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
-  });
-  await new Promise((r) => {
     setTimeout(r, 10000);
     client.set("link", stringarr, redis.print);
-  });
-  await new Promise((r) => {
     setTimeout(r, 10000);
+    client.quit();
   });
-};
-
-const redisQuit = async () => {
-  await new Promise((r) => {
-    setTimeout(r, 10000);
-  });
-  client.quit();
 };
 
 const reRun = async () => {
@@ -186,11 +174,7 @@ const reRun = async () => {
 };
 
 const getAll = async () => {
-  await crawler(),
-    await callEbay(),
-    await sendEbay(),
-    await redisQuit(),
-    await reRun();
+  await crawler(), await callEbay(), await sendEbay(), await reRun();
 };
 
 getAll();
