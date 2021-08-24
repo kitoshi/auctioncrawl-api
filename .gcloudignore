@@ -12,6 +12,7 @@
 # below:
 .git
 .gitignore
+test.js
 
 # Node.js dependencies:
 node_modules/

@@ -43,6 +43,14 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
+//firestore
+const Firestore = require("@google-cloud/firestore");
+
+const db = new Firestore({
+  projectId: "operating-ally-304222",
+  keyFilename: 'firestore.json',
+});
+
 //crawler
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
@@ -142,13 +150,13 @@ const sendEbay = async () => {
     });
   }
   console.log("sendebay");
-  const stringarr = JSON.stringify(combinedList);
-  const ebaystr = JSON.stringify(combinedEbay);
+  const ebaystr = JSON.stringify(combinedEbay)
 
-  //redis post (set)
-  await new Promise((r) => {
-    //redis
-    const redis = require("redis");
+
+//redis
+await new Promise((r) => {
+db.collection("combinedGC").doc('gcdata').set({combinedList});
+const redis = require("redis");
     const client = redis.createClient({
       host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
       port: 10514,
@@ -157,18 +165,15 @@ const sendEbay = async () => {
     client.on("error", function (error) {
       console.error(error);
     });
-    setTimeout(r, 10000);
     client.set("findItemsByKeywordsResponse", ebaystr, redis.print);
     setTimeout(r, 10000);
-    client.set("link", stringarr, redis.print);
-    setTimeout(r, 10000);
     client.quit();
-  });
-};
+  })
+}
 
 const reRun = async () => {
   await new Promise((r) => {
-    setTimeout(r, 28800000);
+    setTimeout(r, 3600000);
   });
   await getAll();
 };
