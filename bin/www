@@ -56,7 +56,7 @@ function normalizePort(val) {
 const cron = require("node-cron");
 const crawler = require("../crawler");
 cron.schedule("* * 8 * *", () => {
-  console.log("cronjob");
+  console.log("8 hour cronjob");
   crawler;
 });
 

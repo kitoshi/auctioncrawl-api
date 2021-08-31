@@ -1,5 +1,3 @@
-const cron = require("node-cron");
-const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
@@ -84,6 +82,9 @@ const crawler = async () => {
         });
         console.log("working");
       });
+    await new Promise((r) => {
+      setTimeout(r, 500);
+    });
     browser.close();
   }
 };
@@ -112,14 +113,25 @@ const callEbay = async () => {
 };
 
 const sendEbay = async () => {
-  const combinedList = [];
+  const combinedList1 = [];
+  const combinedList2 = [];
   const combinedEbay = [];
-  for (let v = 0; v < itemNames.length; v++) {
+  for (let v = 0; v < 100; v++) {
     await new Promise((r) => {
       setTimeout(r, 100);
-      combinedList.push({
+      combinedList1.push({
         ...itemNames[v],
         ...priceList[v],
+      });
+      console.log("combining");
+    });
+  }
+  for (let b = 100; b < itemNames.length; b++) {
+    await new Promise((r) => {
+      setTimeout(r, 100);
+      combinedList2.push({
+        ...itemNames[b],
+        ...priceList[b],
       });
       console.log("combining");
     });
@@ -139,7 +151,9 @@ const sendEbay = async () => {
 
   //redis
   await new Promise((r) => {
-    db.collection("combinedGC").doc("gcdata").set({ combinedList });
+    setTimeout(r, 10000);
+    db.collection("combinedGC").doc("gcdata").set({ combinedList1 });
+    db.collection("combinedGC").doc("gcdata2").set({ combinedList2 });
     const redis = require("redis");
     const client = redis.createClient({
       host: "redis-10514.c60.us-west-1-2.ec2.cloud.redislabs.com",
