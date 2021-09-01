@@ -77,7 +77,7 @@ const crawler = async () => {
           });
         });
       $("dd[class=short]")
-        //id includes currentBidId 
+        //id includes currentBidId
         .find("span[id^=currentBidId]")
         .each(function (index, element) {
           console.log(index);
@@ -85,8 +85,8 @@ const crawler = async () => {
             price: $(element).text(),
           });
         });
+      browser.close();
     });
-    browser.close();
   }
 };
 
@@ -117,7 +117,7 @@ const combinedList2 = [];
 const combinedEbay = [];
 const sendEbay = async () => {
   //firestore has 100 keys limit per doc so split it up here
-  for (let v = 0; v < 100; v++) {
+  for (let v = 0; v < 200; v++) {
     await new Promise((r) => {
       setTimeout(r, 100);
       combinedList1.push({
@@ -129,7 +129,7 @@ const sendEbay = async () => {
   }
   for (let b = 100; b < itemNames.length; b++) {
     await new Promise((r) => {
-      setTimeout(r, 100);
+      setTimeout(r, 200);
       combinedList2.push({
         ...itemNames[b],
         ...priceList[b],
@@ -140,7 +140,7 @@ const sendEbay = async () => {
 
   for (let q = 0; q < ebayList.length; q++) {
     await new Promise((r) => {
-      setTimeout(r, 100);
+      setTimeout(r, 200);
       combinedEbay.push({
         ...ebayList[q],
       });
