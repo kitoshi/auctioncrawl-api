@@ -53,7 +53,7 @@ const urls = [
 const crawler = async () => {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
-    const browser = await puppeteer.launch({ ignoreHTTPSErrors: true });
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(url);
     const content = await page.content();
@@ -77,10 +77,10 @@ const crawler = async () => {
           });
         });
       $("dd[class=short]")
-        //pricelist not generating 174 item
-        .find("span")
+        //id includes currentBidId 
+        .find("span[id^=currentBidId]")
         .each(function (index, element) {
-          console.log(priceList.length);
+          console.log(index);
           priceList.push({
             price: $(element).text(),
           });
@@ -112,11 +112,10 @@ const callEbay = async () => {
     });
   }
 };
-
+const combinedList1 = [];
+const combinedList2 = [];
+const combinedEbay = [];
 const sendEbay = async () => {
-  const combinedList1 = [];
-  const combinedList2 = [];
-  const combinedEbay = [];
   //firestore has 100 keys limit per doc so split it up here
   for (let v = 0; v < 100; v++) {
     await new Promise((r) => {
@@ -148,13 +147,14 @@ const sendEbay = async () => {
       console.log("combiningebaystr");
     });
   }
-  console.log("sendebay");
-
-  const ebaystr = JSON.stringify(combinedEbay);
-
-  //redis
+};
+const sendData = async () => {
   await new Promise((r) => {
-    setTimeout(r, 10000);
+    setTimeout(r, 5000);
+    const ebaystr = JSON.stringify(combinedEbay);
+
+    //redis
+    console.log("sendebay");
     db.collection("combinedGC").doc("gcdata").set({ combinedList1 });
     console.log("sendfirestore1");
     db.collection("combinedGC").doc("gcdata2").set({ combinedList2 });
@@ -174,7 +174,7 @@ const sendEbay = async () => {
 };
 
 const getAll = async () => {
-  await crawler(), await callEbay(), await sendEbay();
+  await crawler(), await callEbay(), await sendEbay(), await sendData();
 };
 
 getAll();
