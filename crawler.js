@@ -117,7 +117,7 @@ const combinedList2 = [];
 const combinedEbay = [];
 const sendEbay = async () => {
   //firestore has 100 keys limit per doc so split it up here
-  for (let v = 0; v < 200; v++) {
+  for (let v = 0; v < 100; v++) {
     await new Promise((r) => {
       setTimeout(r, 100);
       combinedList1.push({
