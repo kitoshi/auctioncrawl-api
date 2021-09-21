@@ -8,7 +8,6 @@ const indexRouter = require("./routes/index");
 const crawlerAPIrouter = require("./routes/crawlerAPI");
 const ebayAPIrouter = require("./routes/ebayAPI");
 const cors = require("cors");
-
 const app = express();
 
 // view engine setup
@@ -23,6 +22,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
+
 app.use("/crawlerAPI", crawlerAPIrouter);
 app.use("/ebayAPI", ebayAPIrouter);
 
