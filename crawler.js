@@ -30,7 +30,8 @@ const crawler = async () => {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    const context = await browser.createIncognitoBrowserContext();
+    const page = await context.newPage();
     await page.goto(url);
     const content = await page.content();
     await new Promise((r) => {
@@ -42,6 +43,7 @@ const crawler = async () => {
       $("td[headers=itemInfo]")
         .find("a")
         .each(function (index, element) {
+          console.log(index + "itemname");
           itemNames.push({
             title: $(element)
               .text()
@@ -54,7 +56,7 @@ const crawler = async () => {
         });
       $("dd[class=short]")
         //id includes currentBidId
-        .find("span[id^=currentBidId]")
+        .find("span[id^=currentBidId-]")
         .each(function (index, element) {
           console.log(index);
           priceList.push({
