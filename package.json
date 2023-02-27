@@ -6,7 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^4.14.1",
+    "@google-cloud/firestore": "^4.15.1",
     "cheerio": "^1.0.0-rc.10",
     "constantinople": "^4.0.1",
     "cookie-parser": "~1.4.4",
@@ -20,7 +20,7 @@
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
     "node-cron": "^3.0.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.2",
     "puppeteer": "^10.0.0",
     "redis": "^3.1.2",
     "xml-js": "^1.6.11"
