@@ -12,10 +12,10 @@ const db = new Firestore({
 //crawler
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
-const itemNames = [];
-const priceList = [];
+
+const itemInfoArray = [];
 const ebayList = [];
-let combinedList = [];
+const combinedList = [];
 const ebayListFiltered = [];
 const urls = [
   'https://www.gcsurplus.ca/mn-eng.cfm?&snc=wfsav&vndsld=0&sc=ach-shop&lci=&sf=ferm-clos&so=ASC&srchtype=&hpcs=&hpsr=&kws=&jstp=&str=1&sr=1&rpp=25',
@@ -38,7 +38,7 @@ const crawler = async () => {
       await filterElements(content);
       browser.close();
     }
-    return itemNames;
+    return;
   } catch (error) {
     console.log(`puppeteer error: ${error}`);
     return error;
@@ -46,37 +46,55 @@ const crawler = async () => {
 };
 
 async function filterElements(content) {
+  const itemNameLinkArray = [];
+  const itemPriceArray = [];
   const $ = cheerio.load(content);
   const cleaner = /(?<![\b])[a-zA-Z0-9]*/g;
-  //regex pulling in extra numbers
-  $('td[headers=itemInfo]')
-    .find('a')
-    .each(function (index, element) {
-      itemNames.push({
-        title: $(element)
-          .text()
-          .match(cleaner)
-          .filter((entry) => /\S/.test(entry))
-          .join(' ')
-          .slice(0, -6),
-        link: `https://www.gcsurplus.ca/` + $(element).attr('href')
-      });
-    });
-  $('dd[class=short]')
-    //id includes currentBidId
-    .find('span[id^=currentBidId]')
-    .each(function (index, element) {
-      console.log(`${index}, ${$(element).text()}`);
-      priceList.push({
-        price: $(element).text()
-      });
-    });
+  new Promise((resolve) => {
+    try {
+      //regex pulling in extra numbers
+      $('td[headers=itemInfo]')
+        .find('a')
+        .each(function (index, element) {
+          itemNameLinkArray.push({
+            title: $(element)
+              .text()
+              .match(cleaner)
+              .filter((entry) => /\S/.test(entry))
+              .join(' ')
+              .slice(0, -6),
+            link: `https://www.gcsurplus.ca/` + $(element).attr('href')
+          });
+        });
+      $('dd[class=short]')
+        //id includes currentBidId
+        .find('span[id^=currentBidId]')
+        .each(function (index, element) {
+          console.log(`${index}, ${$(element).text()}`);
+          itemPriceArray.push({
+            price: $(element).text()
+          });
+        });
+      //combine arrays with order
+      for (const [index, element] of itemNameLinkArray.entries()) {
+        itemInfoArray.push({
+          title: element.title,
+          link: element.link,
+          price: itemPriceArray[index].price
+        });
+      }
+      resolve();
+    } catch (error) {
+      console.log(`cheerio error: ${error}`);
+    }
+  });
+  console.log(JSON.stringify(itemInfoArray));
   return;
 }
 
 const getEbayItemData = async () => {
   try {
-    for (const product of itemNames) {
+    for (const product of itemInfoArray) {
       await fetch(
         `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
           `&SECURITY-APPNAME=${process.env.SECURITY_APPNAME}` +
@@ -128,14 +146,16 @@ const filterEbayItemInfo = async () => {
 };
 
 const mergeCrawledData = async () => {
-  for (const [index, item] of itemNames.entries()) {
+  for (const [index, item] of itemInfoArray.entries()) {
     console.log(`index: ${index}, item: ${item.title}`);
     combinedList.push({
       itemName: item.title,
       itemLink: item.link,
-      gcPrice: (priceList[index] && priceList[index].price) || 'N/A',
-      ebayLink: ebayListFiltered[index].link,
-      ebayPrice: ebayListFiltered[index].price
+      gcPrice: (itemInfoArray[index] && itemInfoArray[index].price) || 'N/A',
+      ebayLink:
+        (ebayListFiltered[index] && ebayListFiltered[index].link) || 'N/A',
+      ebayPrice:
+        (ebayListFiltered[index] && ebayListFiltered[index].price) || 'N/A'
     });
   }
   console.log(`big list: ${combinedList}`);
