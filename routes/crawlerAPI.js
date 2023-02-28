@@ -1,17 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-router.get("/", async function (req, res, next) {
+router.get('/', async function (req, res, next) {
   //firestore
-  const Firestore = require("@google-cloud/firestore");
+  const Firestore = require('@google-cloud/firestore');
   const data = [];
   const db = new Firestore({
-    projectId: "operating-ally-304222",
-    keyFilename: "firestore.json",
+    projectId: 'operating-ally-304222',
+    keyFilename: 'firestore.json'
   });
-  const snapshot = await db.collection("combinedGC").get();
+  const snapshot = await db.collection('gc_ebay_list').get();
   if (snapshot.empty) {
-    console.log("Not Found");
+    console.log('Not Found');
     return;
   } else {
     snapshot.forEach((doc) => {
