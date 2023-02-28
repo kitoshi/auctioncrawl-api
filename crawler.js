@@ -175,6 +175,7 @@ const getAll = async () => {
     await sendData();
 };
 
-getAll();
+//todo need a way to stop calling if data a certain age
+//getAll();
 
 module.exports = crawler;
