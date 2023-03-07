@@ -1,5 +1,5 @@
+require('dotenv').config();
 const fetch = require('node-fetch');
-require('dotenv').config;
 
 //firestore
 const Firestore = require('@google-cloud/firestore');
@@ -96,7 +96,8 @@ const getEbayItemData = async () => {
   try {
     for (const product of itemInfoArray) {
       await fetch(
-        `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords` +
+        `https://svcs.ebay.com/services/search/FindingService/v1?` +
+          `OPERATION-NAME=findItemsByKeywords` +
           `&SECURITY-APPNAME=${process.env.SECURITY_APPNAME}` +
           `&RESPONSE-DATA-FORMAT=JSON` +
           `&GLOBAL-ID=EBAY-US` +
@@ -106,10 +107,12 @@ const getEbayItemData = async () => {
         .then((response) => response.json())
         .then((data) => {
           console.log(`searching for ${product.title}`);
+          console.log(`searching for ${JSON.stringify(data)}`);
           ebayList.push(data);
         })
         .catch((err) => err);
     }
+    console.log(ebayList);
     return ebayList;
   } catch (error) {
     console.log(error);
@@ -122,21 +125,16 @@ const filterEbayItemInfo = async () => {
     let price = 'N/A';
     let link = 'N/A';
     try {
-      if (
-        item.findItemsByKeywordsResponse[0].searchResult[0].item[0] !==
-        undefined
-      ) {
-        price =
-          item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
-            .sellingStatus[0].currentPrice[0].__value__;
-        link =
-          item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
-            .viewItemURL[0];
-      }
+      price =
+        item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
+          .sellingStatus[0].currentPrice[0].__value__;
+      link =
+        item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
+          .viewItemURL[0];
     } catch (error) {
-      console.log(`no ebay data: ${error}`);
+      console.log(`ebay data: ${JSON.stringify(item)}`);
+      console.log(error);
     }
-
     ebayListFiltered.push({
       price: price,
       link: link
@@ -151,20 +149,21 @@ const mergeCrawledData = async () => {
     combinedList.push({
       itemName: item.title,
       itemLink: item.link,
-      gcPrice: (itemInfoArray[index] && itemInfoArray[index].price) || 'N/A',
-      ebayLink:
-        (ebayListFiltered[index] && ebayListFiltered[index].link) || 'N/A',
-      ebayPrice:
-        (ebayListFiltered[index] && ebayListFiltered[index].price) || 'N/A'
+      gcPrice: itemInfoArray[index] && itemInfoArray[index].price,
+      ebayLink: ebayListFiltered[index] && ebayListFiltered[index].link,
+      ebayPrice: ebayListFiltered[index] && ebayListFiltered[index].price
     });
   }
-  console.log(`big list: ${combinedList}`);
+  console.log(`big list: ${JSON.stringify(combinedList)}`);
   return combinedList;
 };
 const sendData = async () => {
   //firestore
   console.log(`sending data to firestore`);
-  await db.collection('gc_ebay_list').doc('api_crawl').set({ combinedList });
+  return await db
+    .collection('gc_ebay_list')
+    .doc('api_crawl')
+    .set({ combinedList });
 };
 
 const getAll = async () => {
@@ -176,6 +175,6 @@ const getAll = async () => {
 };
 
 //todo need a way to stop calling if data a certain age
-//getAll();
+getAll();
 
 module.exports = crawler;
