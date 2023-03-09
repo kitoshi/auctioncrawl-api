@@ -128,6 +128,8 @@ const filterEbayItemInfo = async () => {
       price =
         item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
           .sellingStatus[0].currentPrice[0].__value__;
+      let formattedPrice = price.replace(/(\.\d)(?!\d)/, '$10');
+      price = `$` + formattedPrice;
       link =
         item.findItemsByKeywordsResponse[0].searchResult[0].item[0]
           .viewItemURL[0];
